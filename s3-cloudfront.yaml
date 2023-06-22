@@ -1,0 +1,83 @@
+---
+AWSTemplateFormatVersion: '2010-09-09'
+Description: 'Deploy a static website to S3, CloudFront, and Route53'
+
+Parameters:
+  DomainName:
+    Type: String
+    Description: 'The domain name for the website'
+    AllowedPattern: '(?!-)[A-Za-z0-9-.]{1,63}(?<!-)'
+    ConstraintDescription: 'Must be a valid domain name'
+
+  CertificateArn:
+    Type: String
+    Description: 'The ARN of the SSL certificate for the website'
+
+  IndexDocument:
+    Type: String
+    Description: 'The index document for the website'
+    Default: 'index.html'
+  ErrorDocument:
+    Type: String
+    Description: 'The error document for the website'
+    Default: 'error.html'
+
+Resources:
+  S3Bucket:
+    Type: 'AWS::S3::Bucket'
+    Properties:
+      BucketName: !Sub '${DomainName}'
+      AccessControl: Private
+      WebsiteConfiguration:
+        IndexDocument: !Ref IndexDocument
+        ErrorDocument: !Ref ErrorDocument
+
+  CloudFrontDistribution:
+    Type: 'AWS::CloudFront::Distribution'
+    Properties:
+      DistributionConfig:
+        Aliases:
+          - !Ref DomainName
+        DefaultRootObject: !Ref IndexDocument
+        Origins:
+          - DomainName: !GetAtt S3Bucket.DomainName
+            Id: S3Origin
+            S3OriginConfig:
+              OriginAccessIdentity: ''
+        Enabled: true
+        DefaultCacheBehavior:
+          AllowedMethods:
+            - GET
+            - HEAD
+            - OPTIONS
+          CachedMethods:
+            - GET
+            - HEAD
+          TargetOriginId: S3Origin
+          ForwardedValues:
+            QueryString: false
+            Cookies:
+              Forward: none
+            ViewerProtocolPolicy: allow-all
+            
+        PriceClass: PriceClass_All
+        ViewerCertificate:
+          AcmCertificateArn: !Ref CertificateArn
+          SslSupportMethod: sni-only
+          # MinimumProtocolVersion: TLSv1.2_2018
+          
+
+  Route53RecordSet:
+    Type: 'AWS::Route53::RecordSet'
+    Properties:
+      HostedZoneName: !Join ['', [!Ref DomainName, '.']]
+      Name: !Ref DomainName
+      Type: A
+      AliasTarget:
+        DNSName: !GetAtt CloudFrontDistribution.DomainName
+        HostedZoneId: Z2FDTNDATAQYW2
+
+Outputs:
+  WebsiteUrl:
+    Description: 'The URL of the website'
+    Value: !Sub 'https://${DomainName}'

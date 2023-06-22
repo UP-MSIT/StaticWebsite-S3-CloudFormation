@@ -1,12 +1,15 @@
 #!/bin/bash
 region='us-east-1'
-src_dir="./src/financial-service-web"
-bucket_name='financial.sithvothykiv.site'
+project_name="financial-service-web"
+src_dir="./src/${project_name}"
+bucket_name='financial-service.sithvothykiv.site'
 hosted_zone_name="sithvothykiv.site"
 stack_name="s3-financial-service-website"
 
+certificate="arn:aws:acm:us-east-1:764513351260:certificate/70e84585-f8ea-4052-a269-a3a932d25db8"
+
 aws cloudformation create-stack --region ${region} \
---stack-name ${stack_name} --template-body file://s3-static-website.yaml \
+--stack-name ${stack_name} --template-body file://s3-cloudfront.yaml \
 --parameters ParameterKey=BucketName,ParameterValue=${bucket_name} \
 ParameterKey=HostedZoneName,ParameterValue=${hosted_zone_name}
 
