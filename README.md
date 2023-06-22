@@ -2,6 +2,7 @@
 ## Introduction
 
 Deploy Static website to AWS S3, CloudFront, Route53 using CloudFormation template
+![Untitled Diagram-Page-2](https://github.com/UP-DevOps-Class-Org/StaticWebsite-S3-CloudFormation/assets/34917417/bd80f719-9961-448d-915a-76110c51ad8b)
 
 
 
